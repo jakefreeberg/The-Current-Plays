@@ -1,18 +1,46 @@
 'use client';
 
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
+import { useState } from 'react';
+import Select from 'react-tailwindcss-select';
+import { SelectValue } from 'react-tailwindcss-select/dist/components/type';
+
+const options = [
+  { value: 'fox', label: '🦊 Fox' },
+  { value: 'Butterfly', label: '🦋 Butterfly' },
+  { value: 'Honeybee', label: '🐝 Honeybee' },
+];
 
 export default function Search({ placeholder }: { placeholder: string }) {
+  const [value, setValue] = useState<DateValueType>({
+    startDate: new Date(),
+    endDate: new Date(),
+  });
+
+  const [animal, setAnimal] = useState<SelectValue | null>(null);
+
+  const handleValueChange = (newValue: DateValueType) => {
+    console.log('newValue:', newValue);
+    setValue(newValue);
+  };
+
+  const handleChange = (value: SelectValue) => {
+    console.log('value:', value);
+    setAnimal(value);
+  };
+
   return (
-    <div className="relative flex flex-1 flex-shrink-0">
-      <label htmlFor="search" className="sr-only">
-        Search
-      </label>
-      <input
-        className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
-        placeholder={placeholder}
+    <div className="">
+      <div className="">
+        <Datepicker value={value} onChange={handleValueChange} />
+      </div>
+
+      <Select
+        primaryColor="violet"
+        value={animal}
+        onChange={handleChange}
+        options={options}
       />
-      <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
     </div>
   );
 }
