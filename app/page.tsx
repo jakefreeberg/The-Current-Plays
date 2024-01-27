@@ -44,6 +44,20 @@ export default function Page() {
   const [isDBReady, setIsDBReady] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const sortNames = (nameA: string, nameB: string) => {
+    nameA = nameA.toUpperCase(); // ignore upper and lowercase
+    nameB = nameB.toUpperCase(); // ignore upper and lowercase
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+
+    // names must be equal
+    return 0;
+  };
+
   const handleInitDB = async () => {
     const status = await initDB();
 
@@ -74,10 +88,41 @@ export default function Page() {
     setSelectedArtists(value);
   };
 
+  const addFilter = (name: string) => {
+    const artistOption = options.find((o) => o.value === name);
+    if (artistOption) {
+      if (Array.isArray(selectedArtists)) {
+        setSelectedArtists([...selectedArtists, artistOption]);
+      } else if (selectedArtists) {
+        setSelectedArtists([selectedArtists, artistOption]);
+      } else {
+        setSelectedArtists([artistOption]);
+      }
+    }
+  };
+
+  const multiPlayers: Record<string, number> = {};
   let artists =
     currentData?.map((item: Record<string, string>) => item.artist) || [];
-  let deduped = artists.filter(
-    (item: string, index: number) => artists.indexOf(item) === index,
+  let deduped = artists.filter((item: string, index: number) => {
+    if (artists.indexOf(item) === index) {
+      return true;
+    } else {
+      if (multiPlayers[item]) {
+        multiPlayers[item]++;
+      } else {
+        multiPlayers[item] = 2;
+      }
+    }
+  });
+
+  let multiEntries = Object.entries(multiPlayers);
+  // multiEntries = multiEntries.sort((a: [string, number], b: [string, number]) =>
+  //   sortNames(a[0], b[0]),
+  // );
+
+  multiEntries = multiEntries.sort(
+    (a: [string, number], b: [string, number]) => b[1] - a[1],
   );
 
   let options =
@@ -87,20 +132,10 @@ export default function Page() {
     })) || [];
 
   options = options.sort(
-    (a: Record<string, string>, b: Record<string, string>) => {
-      const nameA = a.value?.toUpperCase(); // ignore upper and lowercase
-      const nameB = b.value?.toUpperCase(); // ignore upper and lowercase
-      if (nameA < nameB) {
-        return -1;
-      }
-      if (nameA > nameB) {
-        return 1;
-      }
-
-      // names must be equal
-      return 0;
-    },
+    (a: Record<string, string>, b: Record<string, string>) =>
+      sortNames(a.value, b.value),
   );
+
   const filteredData =
     currentData?.filter((item: any) => {
       if (Array.isArray(selectedArtists)) {
@@ -126,30 +161,72 @@ export default function Page() {
           </button>
         ) : (
           <div className="">
-            Dates loading: {datesToLoad.join(', ')}
-            <br />
-            <Datepicker
-              value={dateValue}
-              onChange={handleDateChange}
-              minDate={minDate}
-              maxDate={dayjs().add(1, 'day').toDate()}
-            />
-            <br />
-            <Select
-              primaryColor="violet"
-              value={selectedArtists}
-              isMultiple={true}
-              onChange={handleChange}
-              options={options}
-            />
+            {datesToLoad.length ? (
+              <div>
+                Dates loading:{' '}
+                {datesToLoad.map((day, key) => (
+                  <div key={key}>{day}</div>
+                ))}
+              </div>
+            ) : (
+              <>
+                Last 7 days of Playlists loaded
+                <br />
+                <Datepicker
+                  value={dateValue}
+                  onChange={handleDateChange}
+                  minDate={minDate}
+                  maxDate={dayjs().add(1, 'day').toDate()}
+                />
+                <br />
+              </>
+            )}
+            {options.length && (
+              <Select
+                primaryColor="violet"
+                value={selectedArtists}
+                isMultiple={true}
+                onChange={handleChange}
+                options={options}
+              />
+            )}
+
+            <div>
+              {multiEntries.map(([name, value], key: number) => (
+                <button
+                  key={key}
+                  onClick={() => addFilter(name)}
+                  className="mt-1 block rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+                >
+                  {name + ' ' + value}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       <div className="bg-white-100 mt-4 flex-1 grow flex-col gap-4 md:flex-row">
-        {filteredData.map((row: any, key: number) => (
-          <div key={key}>{JSON.stringify(row)}</div>
-        ))}
+        <table className="table-fixed border-collapse">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Hour</th>
+              <th>Artist</th>
+              <th>Song</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((row: any, key: number) => (
+              <tr key={key}>
+                <td className="border p-1">{row.date}</td>
+                <td className="border p-1">{row.hour}</td>
+                <td className="border p-1">{row.artist}</td>
+                <td className="border p-1">{row.song}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </main>
   );
