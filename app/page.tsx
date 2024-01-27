@@ -169,6 +169,20 @@ export default function Page() {
         </button>
         {menuOpen && (
           <>
+            {!isDBReady && (
+              <div className="mb-2">
+                {' '}
+                Select a Time Range <br /> to see what
+                <a
+                  className="ml-1 text-blue-600 underline visited:text-purple-600 hover:text-blue-800"
+                  href="https://www.thecurrent.org/playlist/"
+                >
+                  The Current
+                </a>
+                <br />
+                has been playing
+              </div>
+            )}
             <Datepicker
               value={dateValue}
               onChange={handleDateChange}
