@@ -7,18 +7,18 @@ import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { SelectValue } from 'react-tailwindcss-select/dist/components/type';
 
-import {
-  Stores,
-  Playlist,
-  addData,
-  deleteData,
-  getStoreData,
-  initDB,
-} from './lib/db';
+// import {
+//   Stores,
+//   Playlist,
+//   addData,
+//   deleteData,
+//   getStoreData,
+//   initDB,
+// } from './lib/db';
 import axios from 'axios';
 
 //@ts-ignore
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+// const fetcher = (...args) => fetch(...args).then((res) => res.json());
 // const options = [
 //   { value: 'fox', label: '🦊 Fox' },
 //   { value: 'Butterfly', label: '🦋 Butterfly' },
@@ -59,14 +59,14 @@ export default function Page() {
   };
 
   const handleInitDB = async () => {
-    const status = await initDB();
+    //const status = await initDB();
 
     setDatesToLoad(
       [...Array(7)].map((_, i) => {
         return dayjs().subtract(i, 'day').format('YYYY-MM-DD');
       }),
     );
-    setIsDBReady(!!status);
+    setIsDBReady(true);
   };
 
   useEffect(() => {
