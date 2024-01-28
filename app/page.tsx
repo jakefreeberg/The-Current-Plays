@@ -1,29 +1,11 @@
 'use client';
 
 import dayjs from 'dayjs';
-
+import axios from 'axios';
 import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Select from 'react-tailwindcss-select';
 import { SelectValue } from 'react-tailwindcss-select/dist/components/type';
-
-// import {
-//   Stores,
-//   Playlist,
-//   addData,
-//   deleteData,
-//   getStoreData,
-//   initDB,
-// } from './lib/db';
-import axios from 'axios';
-
-//@ts-ignore
-// const fetcher = (...args) => fetch(...args).then((res) => res.json());
-// const options = [
-//   { value: 'fox', label: '🦊 Fox' },
-//   { value: 'Butterfly', label: '🦋 Butterfly' },
-//   { value: 'Honeybee', label: '🐝 Honeybee' },
-// ];
 
 export default function Page() {
   const [datesToLoad, setDatesToLoad] = useState<Array<string>>([]);
@@ -77,14 +59,18 @@ export default function Page() {
     setDateValue(newValue);
     const numberOfDays =
       dayjs(newValue?.endDate).diff(newValue?.startDate, 'days') + 1;
-    const selectedDates = [...Array(numberOfDays)].map((_, i) => {
-      return dayjs(newValue?.endDate)
-        .subtract(i, 'day')
-        .format('YYYY-MM-DD');
-    });
-    console.log(selectedDates);
-    setCurrentData([]);
-    setDatesToLoad(selectedDates);
+    if (numberOfDays) {
+      // could be undefined or null
+      const selectedDates = [...Array(numberOfDays)].map((_, i) => {
+        return dayjs(newValue?.endDate)
+          .subtract(i, 'day')
+          .format('YYYY-MM-DD');
+      });
+      console.log(selectedDates);
+      setCurrentData([]);
+      setDatesToLoad(selectedDates);
+    }
+
     setIsDBReady(true);
   };
 
@@ -150,23 +136,23 @@ export default function Page() {
     }) || [];
 
   if (error) return <div>Failed to load</div>;
-  // if (!currentData) return <div>Loading... </div>;
-  // {JSON.stringify(dateValue)}
 
   return (
     <main className="flex min-h-screen pr-6 ">
       <div
         className={
           (menuOpen ? 'block' : 'none') +
-          ' w-220 mr-6 flex-none bg-white p-3 shadow-xl'
+          ' w-220 relative mr-6 flex-none bg-white p-3 shadow-xl'
         }
       >
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="mb-3 block rounded bg-indigo-500 px-3 py-1 font-bold text-white hover:bg-indigo-700"
-        >
-          {menuOpen ? '←' : '→'}
-        </button>
+        <div className="text-right">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="mb-3 block rounded bg-indigo-600 px-3 py-1 font-bold text-white hover:bg-indigo-700"
+          >
+            {menuOpen ? '←' : '→'}
+          </button>
+        </div>
         {menuOpen && (
           <>
             {!isDBReady && (
@@ -250,9 +236,9 @@ export default function Page() {
         </div>
         {currentData.length > 0 && (
           <div className="w-full overflow-x-auto">
-            <table className="w-full">
+            <table className="tr-even:bg-grey-light w-full">
               <thead>
-                <tr className="text-md border-b border-gray-600 bg-gray-100 text-left font-semibold uppercase tracking-wide text-gray-900">
+                <tr className="text-md border-b border-gray-600 bg-white text-left font-semibold uppercase tracking-wide text-gray-900">
                   <th className="border px-3 py-1">Day</th>
                   <th className="border px-3 py-1">Hour</th>
                   <th className="border px-3 py-1">Artist</th>
@@ -261,7 +247,7 @@ export default function Page() {
               </thead>
               <tbody className="bg-white">
                 {filteredData.map((row: any, key: number) => (
-                  <tr key={key}>
+                  <tr className="odd:bg-gray-100 hover:bg-gray-200" key={key}>
                     <td className="border px-3 py-1">{row.date}</td>
                     <td className="border px-3 py-1">{row.hour}</td>
                     <td className="border px-3 py-1">{row.artist}</td>
