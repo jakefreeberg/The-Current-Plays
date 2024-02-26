@@ -17,6 +17,7 @@ export default function Page() {
     endDate: new Date(),
   });
 
+  const [currentSort, setSort] = useState<string>('Hour ⬇');
   const [selectedArtists, setSelectedArtists] = useState<SelectValue | null>(
     null,
   );
@@ -30,6 +31,7 @@ export default function Page() {
   const sortNames = (nameA: string, nameB: string) => {
     nameA = nameA.toUpperCase(); // ignore upper and lowercase
     nameB = nameB.toUpperCase(); // ignore upper and lowercase
+
     if (nameA < nameB) {
       return -1;
     }
@@ -66,7 +68,7 @@ export default function Page() {
           .subtract(i, 'day')
           .format('YYYY-MM-DD');
       });
-      console.log(selectedDates);
+      // console.log(selectedDates);
       setCurrentData([]);
       setDatesToLoad(selectedDates);
     }
@@ -88,6 +90,31 @@ export default function Page() {
       } else {
         setSelectedArtists([artistOption]);
       }
+    }
+  };
+
+  const sortClick = (columnName: string) => {
+    const withoutArrow = columnName.split(' ⬇').join().split(' ⬆').join();
+    columnName =
+      currentSort === withoutArrow + ' ⬇'
+        ? withoutArrow + ' ⬆'
+        : withoutArrow + ' ⬇';
+    setSort(columnName);
+  };
+
+  const getSortArrow = (columnName: string) => {
+    if (currentSort.includes(columnName)) {
+      return (
+        <div className="cursor-pointer" onClick={() => sortClick(columnName)}>
+          {currentSort}
+        </div>
+      );
+    } else {
+      return (
+        <div className="cursor-pointer" onClick={() => sortClick(columnName)}>
+          {columnName}
+        </div>
+      );
     }
   };
 
@@ -127,13 +154,34 @@ export default function Page() {
   );
 
   const filteredData =
-    currentData?.filter((item: any) => {
-      if (Array.isArray(selectedArtists)) {
-        const artistStrings = selectedArtists.map((option) => option.value);
-        return artistStrings.includes(item.artist);
-      }
-      return true;
-    }) || [];
+    currentData
+      ?.filter((item: any) => {
+        if (Array.isArray(selectedArtists)) {
+          const artistStrings = selectedArtists.map((option) => option.value);
+          return artistStrings.includes(item.artist);
+        }
+        return true;
+      })
+      .sort((a: Record<string, string>, b: Record<string, string>) => {
+        switch (currentSort) {
+          case 'Artist ⬇':
+            return sortNames(a.artist, b.artist);
+          case 'Artist ⬆':
+            return sortNames(b.artist, a.artist);
+          case 'Song ⬇':
+            return sortNames(a.song, b.song);
+          case 'Song ⬆':
+            return sortNames(b.song, a.song);
+          case 'Date ⬇':
+            return sortNames(a.date, b.date);
+          case 'Date ⬆':
+            return sortNames(b.date, a.date);
+          case 'Hour ⬆':
+            return -1;
+          default:
+            return 0;
+        }
+      }) || [];
 
   if (error) return <div>Failed to load</div>;
 
@@ -239,10 +287,10 @@ export default function Page() {
             <table className="tr-even:bg-grey-light w-full">
               <thead>
                 <tr className="text-md border-b border-gray-600 bg-white text-left font-semibold uppercase tracking-wide text-gray-900">
-                  <th className="border px-3 py-1">Day</th>
-                  <th className="border px-3 py-1">Hour</th>
-                  <th className="border px-3 py-1">Artist</th>
-                  <th className="border px-3 py-1">Song</th>
+                  <th className="border px-3 py-1">{getSortArrow('Date')}</th>
+                  <th className="border px-3 py-1">{getSortArrow('Hour')}</th>
+                  <th className="border px-3 py-1">{getSortArrow('Artist')}</th>
+                  <th className="border px-3 py-1">{getSortArrow('Song')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
