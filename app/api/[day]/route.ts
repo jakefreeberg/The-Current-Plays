@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     cards.each(function () {
       const album = $(this).find('.playlist-title').text();
       const artist = $(this).find('.playlist-artist').eq(0).text();
-      const song = $(this).find('.playlist-artist').eq(1).text();
+      const song = $(this).find('.playlist-title a').eq(0).text();
 
       currentData.push({ date, hour, album, artist, song });
     });
