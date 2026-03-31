@@ -1,33 +1,32 @@
-const cheerio = require('cheerio');
 const axios = require('axios');
-const j2cp = require('json2csv').Parser;
 const fs = require('fs');
 
-const url = 'https://www.thecurrent.org/playlist/the-current/2022-06-09';
-const playlist_data = [];
+const dayArg = process.argv[2] || '2022-06-09';
+const url = `https://www.thecurrent.org/api/playlist/the-current/${dayArg}`;
+const outputPath = './current_info.json';
 
 async function getPlaylist() {
   try {
     const response = await axios.get(url);
-    const $ = cheerio.load(response.data);
-    const date = $('input[name=playlistDate]').attr('value');
-    const hourBlocks = $('.playlist');
-    hourBlocks.each(function () {
-      const hour = $(this).prev().text();
-      const cards = $(this).find('.playlist-card');
-      cards.each(function () {
-        const album = $(this).find('.playlist-title').text();
-        const artist = $(this).find('.playlist-artist').eq(0).text();
-        const song = $(this).find('.playlist-artist').eq(1).text();
+    const jsonData = response.data;
 
-        playlist_data.push({ date, hour, album, artist, song });
-      });
-    });
-    const parser = new j2cp();
-    const csv = parser.parse(playlist_data);
-    fs.writeFileSync('./current_info.csv', csv);
+    if (!jsonData || !Array.isArray(jsonData.plays)) {
+      throw new Error('Unexpected API response format: missing plays array.');
+    }
+
+    fs.writeFileSync(outputPath, JSON.stringify(jsonData, null, 2));
+    console.log(
+      `Saved ${jsonData.plays.length} plays for ${dayArg} to ${outputPath}`,
+    );
   } catch (error) {
-    console.log(error);
+    const status = error.response?.status;
+    const details = error.response?.data?.message || error.message;
+    console.error(
+      `Failed to fetch playlist for ${dayArg}${
+        status ? ` (HTTP ${status})` : ''
+      }: ${details}`,
+    );
+    process.exitCode = 1;
   }
 }
 

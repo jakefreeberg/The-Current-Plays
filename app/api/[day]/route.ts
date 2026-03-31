@@ -2,7 +2,7 @@ import { load } from 'cheerio';
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
 
-const url = 'https://www.thecurrent.org/playlist/the-current/';
+const url = `https://www.thecurrent.org/api/playlist/the-current/`;
 
 export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
@@ -15,28 +15,21 @@ export async function GET(req: NextRequest) {
   const response = await axios.get(url + targetDay);
   const d2 = new Date().getTime();
 
-  console.log('request time:', d2 - d1);
-  const $ = load(response.data);
-  // const start = $('script').last().prev().text();
-  // const clean = start.substring(46, 10000).split('\\"').join('"');
-  // /// const trimmed = clean.substring(0, clean.length - 2);
+  const jsonData = response.data;
 
-  // console.log(clean.length);
+  if (!jsonData || !Array.isArray(jsonData.plays)) {
+    throw new Error('Unexpected API response format: missing plays array.');
+  }
 
-  const playlistDate = $('input[name=playlistDate]').attr('value');
-  const date = playlistDate || 'UNKNOWN DATE';
+  jsonData.plays.forEach((play: any) => {
+    const date = play.played_at || 'UNKNOWN DATE';
+    const hour =
+      new Date(play.played_at).getHours().toString() || 'UNKNOWN HOUR';
+    const album = play.song?.album || 'UNKNOWN ALBUM';
+    const artist = play.song?.artist || 'UNKNOWN ARTIST';
+    const song = play.song?.title || 'UNKNOWN SONG';
 
-  const hourBlocks = $('.playlist');
-  hourBlocks.each(function () {
-    const hour = $(this).prev().text();
-    const cards = $(this).find('.playlist-card');
-    cards.each(function () {
-      const album = $(this).find('.playlist-title').text();
-      const artist = $(this).find('.playlist-artist').eq(0).text();
-      const song = $(this).find('.playlist-title a').eq(0).text();
-
-      currentData.push({ date, hour, album, artist, song });
-    });
+    currentData.push({ date, hour, album, artist, song });
   });
 
   const d3 = new Date().getTime();
